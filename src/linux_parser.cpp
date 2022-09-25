@@ -279,8 +279,8 @@ long LinuxParser::UpTime(int pid)
 
     if(pid_cpu_utilization_data.size() > 22)
     {
-      string up_time = pid_cpu_utilization_data[22];
-      return  std::stol(up_time) / sysconf(_SC_CLK_TCK);
+      string up_time = pid_cpu_utilization_data[21];
+      return  UpTime() - std::stol(up_time) / sysconf(_SC_CLK_TCK);
     }
   }
   return 0;
