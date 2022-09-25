@@ -15,29 +15,43 @@ Process::Process(int init_pid) : pid(init_pid)
 {
     user = LinuxParser::User(init_pid);
     command = LinuxParser::Command(init_pid);
-    cpu_utilization = 0.5;
     ram = LinuxParser::Ram(init_pid);
     up_time = LinuxParser::UpTime(init_pid);
+    ComputeCpuUtilization();
 }
 
-// TODO: Return this process's ID
+
 int Process::Pid() { return pid; }
 
-// TODO: Return this process's CPU utilization
-float Process::CpuUtilization() { return cpu_utilization; }
+float Process::CpuUtilization() {return cpu_utilization;}
 
-// TODO: Return the command that generated this process
+void Process::ComputeCpuUtilization()
+{
+
+    vector<string> cpu_stat_data = LinuxParser::CpuUtilization(pid);
+    long process_time = 0;
+    // the process tieme use is in the indext 13 to 16 from the stat file
+    for(int i=13; i<=16; i++)
+    {
+        process_time += std::stol(cpu_stat_data[i]);
+    }
+    float process_in_seconds = (float)process_time / (float)sysconf(_SC_CLK_TCK);
+    cpu_utilization =  process_in_seconds/ (float)up_time;
+}
+
 string Process::Command() { return command; }
 
-// TODO: Return this process's memory utilization
 string Process::Ram() { return ram; }
 
-// TODO: Return the user (name) that generated this process
 string Process::User() { return user; }
 
-// TODO: Return the age of this process (in seconds)
-long int Process::UpTime() { return up_time; }
+long Process::UpTime() { return up_time; }
 
 // TODO: Overload the "less than" comparison operator for Process objects
 // REMOVE: [[maybe_unused]] once you define the function
-bool Process::operator<(Process const& a[[maybe_unused]]) const { return true; }
+bool Process::operator<(Process const& a) const 
+{ 
+    if(cpu_utilization < a.cpu_utilization)
+        return true;
+    return false;
+}

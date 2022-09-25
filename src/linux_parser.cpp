@@ -91,7 +91,6 @@ float LinuxParser::MemoryUtilization()
   return 0;
 }
 
-
 long LinuxParser::UpTime() 
 { 
   string uptime_in_seconds;
@@ -138,6 +137,23 @@ vector<string> LinuxParser::CpuUtilization()
   return out_cpu_utilization_data;
 }
 
+vector<string> LinuxParser::CpuUtilization(int pid)
+{
+  vector<string> out_cpu_utilization_data;
+  string line;
+  std::ifstream stream(kProcDirectory + to_string(pid) +kStatFilename);
+  if (stream.is_open()) {
+    std::getline(stream, line);
+    string data;
+    std::istringstream linestream(line);
+    while(linestream >> data)
+    {
+      out_cpu_utilization_data.emplace_back(data);
+    }
+  }
+  return out_cpu_utilization_data;
+}
+
 int LinuxParser::TotalProcesses() 
 {
   string line;
@@ -156,7 +172,6 @@ int LinuxParser::TotalProcesses()
   }
   return 0;
 }
-
 
 int LinuxParser::RunningProcesses() 
 { 
@@ -177,7 +192,6 @@ int LinuxParser::RunningProcesses()
   return 0;
 }
 
-
 string LinuxParser::Command(int pid) 
 {
   string line;
@@ -192,7 +206,6 @@ string LinuxParser::Command(int pid)
   }
   return string(" ");
 }
-
 
 string LinuxParser::Ram(int pid) 
 {
@@ -217,8 +230,6 @@ string LinuxParser::Ram(int pid)
   return string(" ");
 }
 
-// TODO: Read and return the user ID associated with a process
-// REMOVE: [[maybe_unused]] once you define the function
 string LinuxParser::Uid(int pid) 
 { 
   string line;
@@ -261,28 +272,13 @@ string LinuxParser::User(int pid)
     return string(" ");
 }
   
-// TODO: Read and return the uptime of a process
-// REMOVE: [[maybe_unused]] once you define the function
 long LinuxParser::UpTime(int pid) 
 { 
-  vector<string> pid_cpu_utilization_data;
-  string line;
-  std::ifstream stream(kProcDirectory + to_string(pid) +kStatFilename);
-  if (stream.is_open()) {
-    std::getline(stream, line);
-    string data;
-    std::istringstream linestream(line);
-    while(linestream >> data)
-    {
-      pid_cpu_utilization_data.emplace_back(data);
-    }
-
-    if(pid_cpu_utilization_data.size() > 22)
-    {
-      string up_time = pid_cpu_utilization_data[21];
-      return  UpTime() - std::stol(up_time) / sysconf(_SC_CLK_TCK);
-    }
+  vector<string> pid_cpu_utilization_data = LinuxParser::CpuUtilization(pid);
+  if(pid_cpu_utilization_data.size() > 22)
+  {
+    string up_time = pid_cpu_utilization_data[21];
+    return  UpTime() - std::stol(up_time) / sysconf(_SC_CLK_TCK);
   }
-  return 0;
-   
+  return 0;   
 }

@@ -23,9 +23,11 @@ class Process {
     int pid;
     std::string user;
     std::string command;
-    float cpu_utilization;
     std::string ram;
-    long int up_time;
+    long up_time;
+    float cpu_utilization;
+    
+    void ComputeCpuUtilization();
 };
 
 #endif
