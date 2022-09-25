@@ -3,10 +3,10 @@
 
 class Processor {
  public:
-  float Utilization();  // TODO: See src/processor.cpp
+  float Utilization();
 
-  // TODO: Declare any necessary private members
  private:
+ void ProcessDataSample(float &total_time, float &idle_time) const; 
 };
 
 #endif
