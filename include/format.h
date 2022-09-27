@@ -5,7 +5,7 @@
 
 namespace Format {
 std::string ElapsedTime(long times);
-std::string PadZeros(std::string &source, int padding_size=2);
+std::string ZeroPadding(std::string &source, int padding_size=2);
 };                                    // namespace Format
 
 #endif
