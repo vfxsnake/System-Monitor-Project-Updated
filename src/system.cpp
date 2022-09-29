@@ -23,6 +23,8 @@ vector<Process>& System::Processes()
     for (int x : LinuxParser::Pids())
     {
         Process current_process(x);
+        if (current_process.Command() == string() || current_process.Ram() == string())
+            continue;
         processes_.emplace_back(current_process);
     }
 

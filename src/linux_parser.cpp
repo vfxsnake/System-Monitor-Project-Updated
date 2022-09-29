@@ -105,19 +105,6 @@ long LinuxParser::UpTime()
   return 0;
 }
 
-// TODO: Read and return the number of jiffies for the system
-long LinuxParser::Jiffies() { return 0; }
-
-// TODO: Read and return the number of active jiffies for a PID
-// REMOVE: [[maybe_unused]] once you define the function
-long LinuxParser::ActiveJiffies(int pid[[maybe_unused]]) { return 0; }
-
-// TODO: Read and return the number of active jiffies for the system
-long LinuxParser::ActiveJiffies() { return 0; }
-
-// TODO: Read and return the number of idle jiffies for the system
-long LinuxParser::IdleJiffies() { return 0; }
-
 vector<string> LinuxParser::CpuUtilization()
 {
   vector<string> out_cpu_utilization_data;
@@ -151,45 +138,46 @@ vector<string> LinuxParser::CpuUtilization(int pid)
       out_cpu_utilization_data.emplace_back(data);
     }
   }
+  stream.close();
   return out_cpu_utilization_data;
+}
+
+// helper function to renturn the value from a particular key.
+// to be used under all search from a key in a line by line loop.
+string FindValueByKeyInFile(const string &matching_key, const string &path_to_file)
+{  
+  string line;
+  string key;
+  string value = string();
+  std::ifstream filestream(path_to_file);
+  if (filestream.is_open()) 
+  {
+    while (std::getline(filestream, line)) 
+    {
+      std::istringstream linestream(line);
+      linestream >> key >> value; 
+      if (key == matching_key) 
+        return value;
+    }
+  }
+  return value;
+  
 }
 
 int LinuxParser::TotalProcesses() 
 {
-  string line;
-  string key;
-  string value;
-  std::ifstream filestream(kProcDirectory + kStatFilename);
-  if (filestream.is_open()) 
-  {
-    while (std::getline(filestream, line)) 
-    {
-      std::istringstream linestream(line);
-      linestream >> key >> value; 
-      if (key == "processes") 
-        return stoi(value);
-    }
-  }
-  return 0;
+  string value = FindValueByKeyInFile("processes", kProcDirectory + kStatFilename);
+  if(value == string())
+    return 0;
+  return stoi(value);
 }
 
 int LinuxParser::RunningProcesses() 
 { 
-  string line;
-  string key;
-  string value;
-  std::ifstream filestream(kProcDirectory + kStatFilename);
-  if (filestream.is_open()) 
-  {
-    while (std::getline(filestream, line)) 
-    {
-      std::istringstream linestream(line);
-      linestream >> key >> value; 
-      if (key == "procs_running") 
-        return stoi(value);
-    }
-  }
-  return 0;
+  string value = FindValueByKeyInFile("procs_running", kProcDirectory + kStatFilename);
+  if(value == string())
+    return 0;
+  return stoi(value);
 }
 
 string LinuxParser::Command(int pid) 
@@ -204,49 +192,23 @@ string LinuxParser::Command(int pid)
     linestream >> value;
     return value;
   }
-  return string(" ");
+  return string();
 }
 
 string LinuxParser::Ram(int pid) 
 {
-  string line;
-  string key;
-  string value;
-  std::ifstream filestream(kProcDirectory + to_string(pid) + kStatusFilename);
-  if (filestream.is_open()) 
-  {
-    while (std::getline(filestream, line)) 
-    {
-      std::istringstream linestream(line);
-      linestream >> key >> value; 
-      if (key == "VmSize:")
-      {
-        float value_in_mb = stof(value) * 0.001;
-        string val_str = to_string(value_in_mb);
-        return val_str.substr(0, val_str.find(".")+4);
-      }
-    }
-  }
-  return string(" ");
+  string value = FindValueByKeyInFile("VmSize:", kProcDirectory + to_string(pid) + kStatusFilename);
+  if(value == string())
+    return string();
+  float value_in_mb = stof(value) * 0.001;
+  string val_str = to_string(value_in_mb);
+  return val_str.substr(0, val_str.find(".")+4);
 }
 
 string LinuxParser::Uid(int pid) 
 { 
-  string line;
-  string key;
-  string value;
-  std::ifstream filestream(kProcDirectory + to_string(pid) + kStatusFilename);
-  if (filestream.is_open()) 
-  {
-    while (std::getline(filestream, line)) 
-    {
-      std::istringstream linestream(line);
-      linestream >> key >> value; 
-      if (key == "Uid:")
-        return value;
-    }
-  }
-  return string(" ");
+  return FindValueByKeyInFile("Uid:", kProcDirectory + to_string(pid) + kStatusFilename);
+ 
 }
 
 string LinuxParser::User(int pid) 
